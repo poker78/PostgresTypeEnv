@@ -18,24 +18,30 @@ type ConfigEnv struct {
 	SetMaxIdleConns    int    `env:"SET_MAX_IDLE_CONNS"`
 	SetMaxOpenConns    int    `env:"SET_MAX_OPEN_CONNS"`
 	SetConnMaxLifetime int    `env:"SET_CONN_MAX_LIFETIME"`
+	Configs            interface{}
 }
 
 var configEnvPostgres ConfigEnv
 
-func CreateConfig() *ConfigEnv {
+func CreateConfig(configs interface{}) *ConfigEnv {
 	envFeeder := feeder.DotEnv{Path: ".env"}
+
+	data := ConfigEnv{}
+	data.Configs = configs
 
 	c := config.New()
 	c.AddFeeder(envFeeder)
-	c.AddStruct(&configEnvPostgres)
+	c.AddStruct(&data)
 
 	if err := c.Feed(); err != nil {
 		logrus.Errorln(err)
 	}
 
-	if err := validate(&configEnvPostgres); err != nil {
+	if err := validate(&data); err != nil {
 		logrus.Errorln(err)
 	}
+
+	configEnvPostgres = data
 	return &configEnvPostgres
 }
 
