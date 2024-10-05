@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type ConfigEnv struct {
+type ConfigEnv[T any] struct {
 	PostgresUrl        string `env:"POSTGRES_URL"`
 	PostgresPort       string `env:"POSTGRES_PORT"`
 	PostgresDb         string `env:"POSTGRES_DB"`
@@ -18,15 +18,15 @@ type ConfigEnv struct {
 	SetMaxIdleConns    int    `env:"SET_MAX_IDLE_CONNS"`
 	SetMaxOpenConns    int    `env:"SET_MAX_OPEN_CONNS"`
 	SetConnMaxLifetime int    `env:"SET_CONN_MAX_LIFETIME"`
-	Configs            interface{}
+	Configs            T
 }
 
-var configEnvPostgres ConfigEnv
+var configEnvPostgres ConfigEnv[any]
 
-func CreateConfig(configs interface{}) *ConfigEnv {
+func CreateConfig[T any](configs T) *ConfigEnv[T] {
 	envFeeder := feeder.DotEnv{Path: ".env"}
 
-	data := ConfigEnv{}
+	data := ConfigEnv[T]{}
 	data.Configs = configs
 
 	c := config.New()
@@ -41,11 +41,10 @@ func CreateConfig(configs interface{}) *ConfigEnv {
 		logrus.Errorln(err)
 	}
 
-	configEnvPostgres = data
-	return &configEnvPostgres
+	return &data
 }
 
-func validate(c *ConfigEnv) error {
+func validate[T any](c *ConfigEnv[T]) error {
 	v := validator.New()
 
 	return v.Struct(c)
